@@ -12,18 +12,18 @@ import com.example.demo.DTO.LoginRequest;
 import com.example.demo.DTO.UserResponse;
 
 @Service
-public class Servise {
+public class RedisSerivce {
 
     private static final Duration USER_TTL = Duration.ofDays(2);
 
     private final StringRedisTemplate redisTemplate;
 
 
-    public Servise(StringRedisTemplate redisTemplate) {
+    public RedisSerivce(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
-    public UserResponse register(DTO dto) {
+    public AuthDTOS.UserResponse register(DTO dto) {
         validateRegister(dto);
 
         String id = (dto.id() == null || dto.id().isBlank())? UUID.randomUUID().toString()
@@ -37,18 +37,18 @@ public class Servise {
         redisTemplate.opsForHash().putAll(key, Map.of("email", dto.gmail().trim(),"name", dto.name().trim(),"password", dto.password().trim()));
         redisTemplate.expire(key, USER_TTL);
 
-        return new UserResponse(id, dto.gmail().trim(), dto.name().trim());
+        return new AuthDTOS.UserResponse(id, dto.gmail().trim(), dto.name().trim());
     }
 
-    public UserResponse getUser(String id) {
+    public AuthDTOS.UserResponse getUser(String id) {
         Map<Object, Object> data = redisTemplate.opsForHash().entries(userKey(id));
         if (data.isEmpty()) {
             throw new IllegalArgumentException("User not found: " + id);
         }
-        return new UserResponse(id,stringValue(data.get("email")),stringValue(data.get("name")));
+        return new AuthDTOS.UserResponse(id,stringValue(data.get("email")),stringValue(data.get("name")));
     }
 
-    public UserResponse login(LoginRequest request) {
+    public AuthDTOS.UserResponse login(LoginRequest request) {
         if (request == null || isBlank(request.id()) || isBlank(request.password())) {
             throw new IllegalArgumentException("id and password are required");
         }
