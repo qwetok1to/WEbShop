@@ -56,8 +56,8 @@ services:
       - networkName
 
   
-  demo:
-    build: ./demo
+  auth-service:
+    build: ./auth-service
     ports:
       - "8083:8083"
     environment:
