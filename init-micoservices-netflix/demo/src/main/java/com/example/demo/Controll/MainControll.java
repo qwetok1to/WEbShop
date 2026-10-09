@@ -35,17 +35,6 @@ public class MainControll {
         return ResponseEntity.ok(servise.login(request));
     }
 
-    @GetMapping("/register/{id}")
-    public ResponseEntity<?> getUser(@PathVariable String id) {
-        try {
-            return ResponseEntity.ok(servise.getUser(id));
-        } catch (IllegalArgumentException e) {
-          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
 
-    @GetMapping("/register/{id}/ttl")
-    public ResponseEntity<?> getTtl(@PathVariable String id) {
-        return ResponseEntity.ok(Map.of("id", id, "ttlSeconds", servise.getTtl(id)));
-    }
+    
 }
