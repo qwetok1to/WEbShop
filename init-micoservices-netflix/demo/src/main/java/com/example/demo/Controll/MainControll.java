@@ -1,0 +1,51 @@
+package com.example.demo.Controll;
+
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.DTO.DTO;
+import com.example.demo.DTO.LoginRequest;
+import com.example.demo.Servise.Servise;
+
+@RestController
+@RequestMapping ("/auf")
+public class MainControll {
+    private final Servise servise;
+
+    public MainControll(Servise servise) {
+        this.servise = servise;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody DTO dto) {
+        servise.register(dto);
+        return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(servise.login(request));
+    }
+
+    @GetMapping("/register/{id}")
+    public ResponseEntity<?> getUser(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(servise.getUser(id));
+        } catch (IllegalArgumentException e) {
+          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/register/{id}/ttl")
+    public ResponseEntity<?> getTtl(@PathVariable String id) {
+        return ResponseEntity.ok(Map.of("id", id, "ttlSeconds", servise.getTtl(id)));
+    }
+}

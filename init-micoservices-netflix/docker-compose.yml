@@ -1,0 +1,82 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - netflix-network
+
+  eureka:
+    build: ./eureka
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka
+    networks:
+      - netflix-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: demo-postgres
+    environment:
+      POSTGRES_DB: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d password"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+   
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      - eureka
+    networks:
+      - netflix-network
+  admin:
+   build: ./admin
+   ports:
+    -"8084:8083"
+  environment:
+    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+
+
+    networks:
+      - networkName
+
+  
+  demo:
+    build: ./demo
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+    depends_on:
+    
+      - eureka
+      - redis
+    
+    networks:
+      - netflix-network
+
+networks:
+  netflix-network:
+    driver: bridge
