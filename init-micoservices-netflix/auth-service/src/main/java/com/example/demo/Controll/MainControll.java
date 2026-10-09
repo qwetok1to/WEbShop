@@ -25,7 +25,7 @@ public class MainControll {
         servise.register(dto);
         return ResponseEntity.status(HttpStatus.OK).body("User registered successfully");
     }
-
+    // TODO: Make a jwt
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthDTOS.LoginRequest request) {
         return ResponseEntity.ok(servise.login(request));
