@@ -19,7 +19,7 @@ services:
     image: postgres:16-alpine
     container_name: demo-postgres
     environment:
-      POSTGRES_DB: password
+      POSTGRES_DB: webshop
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "1"
     ports:
@@ -27,12 +27,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d password"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d webshop"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
-   
+    networks:
+      - netflix-network
 
   api-gateway:
     build: ./api-gateway
@@ -44,39 +45,69 @@ services:
       - eureka
     networks:
       - netflix-network
+
   admin:
-   build: ./admin
-   ports:
-    -"8084:8083"
-  environment:
-    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
-
-
+    build: ./admin/admin
+    ports:
+      - "8084:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_started
     networks:
-      - networkName
+      - netflix-network
 
-  
   auth-service:
     build: ./auth-service
     ports:
       - "8083:8083"
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      SERVER_PORT: 8083
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
     depends_on:
-    
-      - eureka
-      - redis
-    
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - netflix-network
+
+  shop:
+    build: ./shop/shop
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1"
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-32-byte-development-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_started
     networks:
       - netflix-network
 
 networks:
   netflix-network:
     driver: bridge
+
+volumes:
+  postgres_data:

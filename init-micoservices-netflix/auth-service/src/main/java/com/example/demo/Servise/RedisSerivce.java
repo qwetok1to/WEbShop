@@ -7,9 +7,7 @@ import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.DTO.DTO;
-import com.example.demo.DTO.LoginRequest;
-import com.example.demo.DTO.UserResponse;
+import com.example.demo.DTO.AuthDTOS;
 
 @Service
 public class RedisSerivce {
@@ -23,7 +21,7 @@ public class RedisSerivce {
         this.redisTemplate = redisTemplate;
     }
 
-    public AuthDTOS.UserResponse register(DTO dto) {
+    public AuthDTOS.UserResponse register(AuthDTOS.UserDTO dto) {
         validateRegister(dto);
 
         String id = (dto.id() == null || dto.id().isBlank())? UUID.randomUUID().toString()
@@ -48,7 +46,7 @@ public class RedisSerivce {
         return new AuthDTOS.UserResponse(id,stringValue(data.get("email")),stringValue(data.get("name")));
     }
 
-    public AuthDTOS.UserResponse login(LoginRequest request) {
+    public AuthDTOS.UserResponse login(AuthDTOS.LoginRequest request) {
         if (request == null || isBlank(request.id()) || isBlank(request.password())) {
             throw new IllegalArgumentException("id and password are required");
         }
@@ -73,7 +71,7 @@ public class RedisSerivce {
         return ttl != null ? ttl : -1L;
     }
 
-    private void validateRegister(DTO dto) {
+    private void validateRegister(AuthDTOS.UserDTO dto) {
         if (dto == null) {
             throw new IllegalArgumentException("Request body is required");
         }

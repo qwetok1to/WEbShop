@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.DTO.AuthDTOS;
-import com.example.demo.DTO.DTO;
-import com.example.demo.DTO.LoginRequest;
 import com.example.demo.Servise.RedisSerivce;
 
 @RestController
