@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
@@ -49,6 +50,7 @@ public class SecurityConfig {
                         (request, response, exception) -> response.sendError(401)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/image/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JWTfilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .build();

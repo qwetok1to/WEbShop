@@ -55,6 +55,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1"
+      APP_IMAGE_STORAGE_DIR: /app/image
+    volumes:
+      - product_images:/app/image
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,3 +114,4 @@ networks:
 
 volumes:
   postgres_data:
+  product_images:
