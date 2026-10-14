@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.DTO.AuthDTOS;
 import com.example.demo.Servise.RedisSerivce;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
-@RequestMapping ("/auth")
+@RequestMapping ("/auth-public")
 public class MainControll {
     private final RedisSerivce servise;
 
@@ -28,6 +31,11 @@ public class MainControll {
     public ResponseEntity<?> login(@RequestBody AuthDTOS.LoginRequest request) {
         return ResponseEntity.ok(servise.login(request));
     }
+    @GetMapping("/test")
+    public String getMethodName() {
+       return "Received parameter: ";
+    }
+    
 
 
     

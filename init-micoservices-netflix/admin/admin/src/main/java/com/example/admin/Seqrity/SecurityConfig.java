@@ -25,10 +25,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    UserDetailsService userDetailsService(
-            @Value("${security.admin.username}") String username,
-            @Value("${security.admin.password}") String password,
-            PasswordEncoder passwordEncoder) {
+    UserDetailsService userDetailsService( @Value("${security.admin.username}") String username,@Value("${security.admin.password}") String password,PasswordEncoder passwordEncoder) {
         return new InMemoryUserDetailsManager(
                 User.withUsername(username)
                         .password(passwordEncoder.encode(password))
@@ -40,7 +37,6 @@ public class SecurityConfig {
     AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JWT_UTILS jwtUtils) throws Exception {
         return http

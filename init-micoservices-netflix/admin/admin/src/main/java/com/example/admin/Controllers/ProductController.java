@@ -33,13 +33,8 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProductEntity> addProduct(
-            @RequestParam("name") String name,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam("price") BigDecimal price,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
-        add_product request = new add_product(
-                name, description, price.doubleValue(), null);
+    public ResponseEntity<ProductEntity> addProduct(@RequestParam("name") String name,@RequestParam(value = "description", required = false) String description,@RequestParam("price") BigDecimal price,@RequestParam(value = "file", required = false) MultipartFile file) {
+        add_product request = new add_product(name, description, price.doubleValue(), null);
         ProductEntity savedProduct = productService.addProduct(request, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }

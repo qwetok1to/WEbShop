@@ -20,11 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class saveimaga {
 
-    private static final Map<String, String> ALLOWED_TYPES = Map.of(
-            "image/jpeg", "jpg",
-            "image/png", "png",
-            "image/gif", "gif");
-
+    private static final Map<String, String> ALLOWED_TYPES = Map.of( "image/jpeg", "jpg","image/png", "png");
     private final Path path;
 
     public saveimaga(@Value("${app.image.storage-dir:image}") String storageDirectory) {
@@ -81,8 +77,7 @@ public class saveimaga {
             } catch (IOException cleanupException) {
                 e.addSuppressed(cleanupException);
             }
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store uploaded image", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store uploaded image", e);
         }
     }
 

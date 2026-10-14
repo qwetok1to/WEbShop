@@ -17,7 +17,6 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: demo-postgres
     environment:
       POSTGRES_DB: webshop
       POSTGRES_USER: postgres
@@ -71,6 +70,7 @@ services:
     ports:
       - "8083:8083"
     environment:
+      SPRING_APPLICATION_NAME: auth-service
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
       SERVER_PORT: 8083
       REDIS_HOST: redis
