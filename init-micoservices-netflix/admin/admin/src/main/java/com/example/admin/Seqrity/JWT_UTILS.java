@@ -6,22 +6,20 @@ import java.util.List;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
-@Component
 public class JWT_UTILS {
+
     private final SecretKey key;
     private final long jwtExpirationInMs = 3_600_000;
 
-    public JWT_UTILS(@Value("${jwt.secret}") String secret) {
+    public JWT_UTILS(String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

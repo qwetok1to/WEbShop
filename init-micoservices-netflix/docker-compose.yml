@@ -3,6 +3,12 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     networks:
       - netflix-network
 
@@ -50,6 +56,9 @@ services:
     ports:
       - "8084:8082"
     environment:
+      SECURITY_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin-password}
+      SECURITY_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-only-admin-secret-change-before-deploy-1234567890}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
       SPRING_DATASOURCE_USERNAME: postgres
@@ -79,6 +88,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-32-byte-development-secret}
 
     depends_on:
       postgres:
@@ -86,7 +96,7 @@ services:
       eureka:
         condition: service_started
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - netflix-network
 

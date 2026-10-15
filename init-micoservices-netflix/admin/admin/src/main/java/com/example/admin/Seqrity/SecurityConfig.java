@@ -20,6 +20,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
+    JWT_UTILS jwtUtils(@Value("${security.jwt.secret:${jwt.secret}}") String secret) {
+        return new JWT_UTILS(secret);
+    }
+
+    @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
