@@ -2,7 +2,7 @@ package com.example.admin.Controllers;
 
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,9 +16,11 @@ import com.example.admin.DTO.AddProductRequest;
 import com.example.admin.Entity.ProductEntity;
 import com.example.admin.Servises.Servise;
 import com.example.admin.Servises.saveimaga;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/image")
 public class ProductController {
 
     private final Servise productService;
@@ -34,18 +36,20 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.addProduct(request));
     }
 
-    @PostMapping(path = "/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProductEntity> addProductWithImage(
-            @RequestPart("product") AddProductRequest request,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+    @PostMapping("/with-image")
+    public ResponseEntity<ProductEntity> addProductWithImage(@RequestPart("product") AddProductRequest request, @RequestPart(value = "file", required = false) MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.addProduct(request, file));
     }
 
-    @PostMapping(path = "/AddPhoto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadPhoto(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("description") String description) {
+    @PostMapping("/AddPhoto")
+    public ResponseEntity<String> uploadPhoto(@RequestParam("file") MultipartFile file,@RequestParam("description") String description) {
         return ResponseEntity.status(HttpStatus.CREATED).body(imageStorage.savephoto(file, description));
     }
+    @GetMapping("/test")
+    public String getMethodName() {
+        return "OK";
+      
+    }
+    
 
 }

@@ -17,7 +17,7 @@ import io.jsonwebtoken.security.Keys;
 public class JWT_UTILS {
 
     private final SecretKey key;
-    private final long jwtExpirationInMs = 3_600_000;
+    private final long jwtExpirationInMs = 10_600_000;
 
     public JWT_UTILS(String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

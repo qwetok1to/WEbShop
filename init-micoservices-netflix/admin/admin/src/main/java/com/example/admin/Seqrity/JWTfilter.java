@@ -1,69 +1,69 @@
 package com.example.admin.Seqrity;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.example.admin.Servises.CustomUserDetrails;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+@Component
 public class JWTfilter extends OncePerRequestFilter {
 
-    private final JWT_UTILS jwtUtils;
+    private final CustomUserDetrails userDetailsService;
+    
 
-    public JWTfilter(JWT_UTILS jwtUtils) {
-        this.jwtUtils = jwtUtils;
+    public JWTfilter(CustomUserDetrails userDetailsService) {
+
+        this.userDetailsService = userDetailsService;
     }
-
+    @Autowired 
+    JWT_UTILS jwt;
+      
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
-        String authorization = request.getHeader("Authorization");
-        if (authorization == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (!authorization.startsWith("Bearer ") || authorization.length() <= 7) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid bearer token");
-            return;
-        }
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+            throws ServletException, IOException {
 
-        try {
-            Claims claims = jwtUtils.parseToken(authorization.substring(7));
-            if (claims.getSubject() == null || claims.getSubject().isBlank()) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid bearer token");
-                return;
-            }
+        String authHeader = req.getHeader("Authorization");
 
-            Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-            Object rolesClaim = claims.get("roles");
-            if (rolesClaim instanceof List<?> roles) {
-                roles.stream()
-                        .filter(String.class::isInstance)
-                        .map(String.class::cast)
-                        .map(SimpleGrantedAuthority::new)
-                        .forEach(authorities::add);
-            }
-            SecurityContextHolder.getContext().setAuthentication(
-                    new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities));
-        } catch (JwtException | IllegalArgumentException exception) {
-            SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired bearer token");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+            System.out.println("ДОСТУЧАЛСЯ НО UNAUTHORIZED ИЗ ЗА ОТСУТСВИЯ ГОЛОВЫ ЗАПРОСА ИЛИ НЕ ПРАВИЛЬНОГО ПРЕФИКСА");
+            logger.info("прошло");
             return;
         }
 
-        filterChain.doFilter(request, response);
+        String token = authHeader.substring(7);
+        String username=jwt.getUsernameFromToken(token);
+
+        if (!jwt.validateToken(token)) {
+            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+            
+            System.out.println("ДОСТУЧАЛСЯ НО UNAUTHORIZED YНЕ ИЗ ЗА ФИЛЬТРА");
+            logger.info("токен валиден");
+            return;
+        }
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        req.setAttribute("username", username);
+
+        chain.doFilter(req, res);
     }
 }

@@ -18,6 +18,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 public class SecurityConfig {
+    private final JWT_UTILS jwt_UTILS;
+    public SecurityConfig(JWT_UTILS jwt_UTILS){
+        this.jwt_UTILS=jwt_UTILS;
+    }
 
     @Bean
     JWT_UTILS jwtUtils(@Value("${security.jwt.secret:${jwt.secret}}") String secret) {
@@ -50,7 +54,7 @@ public class SecurityConfig {
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(
                         (request, response, exception) -> response.sendError(401)))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/image/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JWTfilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
