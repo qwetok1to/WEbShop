@@ -32,7 +32,9 @@ docker compose down
 Для локального запуска Compose admin-пользователь по умолчанию: `admin` /
 `admin-password`. Перед использованием задайте собственные значения переменных
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_JWT_SECRET` и `JWT_SECRET`. `JWT_SECRET`
-должен быть не короче 32 байт и одинаковым для auth-service и shop.
+должен быть не короче 32 байт и одинаковым для API Gateway, auth-service и shop.
+Для защищённых запросов через gateway передавайте JWT в заголовке
+`Authorization: Bearer <token>`; маршруты входа и регистрации остаются публичными.
 
 Регистрация доступна на `POST /auth-public/register`; ответ содержит ID,
 необходимый для входа через `POST /auth-public/login`. Ответ входа включает

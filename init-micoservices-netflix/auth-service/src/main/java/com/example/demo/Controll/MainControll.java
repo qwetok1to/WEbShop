@@ -1,65 +1,66 @@
+
 package com.example.demo.Controll;
 
+import org.aspectj.lang.annotation.RequiredTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.server.ResponseStatusException;
+
 
 import com.example.demo.DTO.AuthDTOS;
-import com.example.demo.Servise.AuthTokenService;
+import com.example.demo.Servise.JWT_UTILS;
 import com.example.demo.Servise.RedisSerivce;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+ @Tag (name="auth",description="привет")
 @RestController
 @RequestMapping("/auth-public")
 public class MainControll {
 
-    private final RedisSerivce servise;
-    private final AuthTokenService tokenService;
+    private final JWT_UTILS jwt;
+    private final RedisSerivce redisS;
 
-    public MainControll(RedisSerivce servise, AuthTokenService tokenService) {
-        this.servise = servise;
-        this.tokenService = tokenService;
+    public MainControll(JWT_UTILS jwt, RedisSerivce redisS) {
+        this.redisS = redisS;
+        this.jwt = jwt;
     }
-
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "регистер пост мапинг") 
+    @Operation (description ="register")
     @PostMapping("/register")
-    public ResponseEntity<AuthDTOS.UserResponse> register(@RequestBody AuthDTOS.UserDTO dto) {
-        AuthDTOS.UserResponse user;
-        try {
-            user = servise.register(dto);
-        } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
-        } catch (IllegalStateException exception) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage(), exception);
+    public ResponseEntity<String> register(@RequestBody AuthDTOS dto,   @Parameter(name = "name",description = "String-lololo") String name) {
+      
+        String req = redisS.register(dto);
+
+        switch (req) {
+            case "BAD_REQUEST":
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(req);
+
+            case "GONE":
+                return ResponseEntity.status(HttpStatus.GONE).body(req);
+
+            default:
+                return ResponseEntity.status(HttpStatus.CREATED).body(req);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthDTOS.LoginResponse> login(@RequestBody AuthDTOS.LoginRequest request) {
-        if (request == null || request.id() == null || request.id().isBlank()
-                || request.password() == null || request.password().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "id and password are required");
+    public ResponseEntity<String> login(@RequestBody AuthDTOS dto) {
+        String req = redisS.login(dto);
+        switch (req) {
+            case "Forbidden":
+                   return ResponseEntity.status(HttpStatus.FORBIDDEN).body(req);
+
+            default:
+                return ResponseEntity.status(HttpStatus.OK).body(req);
+            
         }
-        try {
-            AuthDTOS.UserResponse user = servise.login(request);
-            return ResponseEntity.ok(new AuthDTOS.LoginResponse(
-                    user.id(),
-                    user.gmail(),
-                    user.name(),
-                    tokenService.createToken(user),
-                    "Bearer",
-                    tokenService.getExpirationSeconds()));
-        } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid id or password", exception);
-        }
+
+   
     }
 
-    @GetMapping("/test")
-    public String getMethodName() {
-        return "Received parameter: ";
-    }
 }

@@ -1,94 +1,104 @@
 package com.example.demo.Servise;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.DTO.AuthDTOS;
+import com.example.demo.Entity.UsersEntity;
+import com.example.demo.rep.usersRep;
 
 @Service
 public class RedisSerivce {
 
     private static final Duration USER_TTL = Duration.ofDays(2);
 
-    private final StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redis;
+    private final JWT_UTILS jwt;
+    private final usersRep rep;
 
-
-    public RedisSerivce(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public RedisSerivce(StringRedisTemplate redis, JWT_UTILS jwt,usersRep rep) {
+        this.redis = redis;
+        this.jwt = jwt;
+        this.rep=rep;
     }
+  
 
-    public AuthDTOS.UserResponse register(AuthDTOS.UserDTO dto) {
-        validateRegister(dto);
-
-        String id = (dto.id() == null || dto.id().isBlank())? UUID.randomUUID().toString()
-                : dto.id().trim();
-
-        String key = userKey(id);
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
-            throw new IllegalStateException("User already exists: " + id);
+    public String register(AuthDTOS user) {
+        try{
+        if (user == null|| user.name == null || user.name.isBlank()|| user.password == null || user.password.isBlank() || user.mail == null || user.mail.isBlank()) {
+            throw new IllegalArgumentException("BAD_REQUEST");
         }
 
-        redisTemplate.opsForHash().putAll(key, Map.of("email", dto.gmail().trim(),"name", dto.name().trim(),"password", dto.password().trim()));
-        redisTemplate.expire(key, USER_TTL);
+        String mail = user.mail.trim().toLowerCase(Locale.ROOT);
+        String key = userKey(mail);
 
-        return new AuthDTOS.UserResponse(id, dto.gmail().trim(), dto.name().trim());
-    }
-
-    public AuthDTOS.UserResponse getUser(String id) {
-        Map<Object, Object> data = redisTemplate.opsForHash().entries(userKey(id));
-        if (data.isEmpty()) {
-            throw new IllegalArgumentException("User not found: " + id);
+        if (Boolean.TRUE.equals(redis.hasKey(key))) {
+            throw new IllegalStateException("GONE");
         }
-        return new AuthDTOS.UserResponse(id,stringValue(data.get("email")),stringValue(data.get("name")));
-    }
+        redis.opsForHash().putAll(key, Map.of("name", user.name.trim(),"mail", mail,"password", user.password));
+        redis.expire(key, USER_TTL);
+            
+        save_user(user);
+        return "Create"+jwt.generalToken(user.name);
 
-    public AuthDTOS.UserResponse login(AuthDTOS.LoginRequest request) {
-        if (request == null || isBlank(request.id()) || isBlank(request.password())) {
-            throw new IllegalArgumentException("id and password are required");
+        }catch(Exception e){
+            return "error"+e;
         }
 
-        String id = request.id().trim();
-        String key = userKey(id);
-        Object storedPassword = redisTemplate.opsForHash().get(key, "password");
-        if (storedPassword == null) {
-            throw new IllegalArgumentException("Invalid id or password");
+    }
+
+  
+    public String login(AuthDTOS dto) {
+        UsersEntity finded_user = rep.findByUsername(dto.name);
+		String token = jwt.generalToken(dto.name);
+
+		if (finded_user == null) {
+			return "Forbiden";
+		} else {
+			if (dto.password.equals(finded_user.getPassword())) {
+				return token;
+			} else {
+				return "Forbiden";
+			}
+
+		}
+    }
+
+    public String getUserName(String mail) {
+        if (mail == null || mail.isBlank()) {
+            throw new IllegalArgumentException("Mail is required");
         }
 
-        if (!storedPassword.toString().equals(request.password().trim())) {
-            throw new IllegalArgumentException("Invalid id or password");
+        Object name = redis.opsForHash().get(userKey(mail), "name");
+
+        if (name == null) {
+            throw new IllegalArgumentException("User not found");
         }
 
-        redisTemplate.expire(key, USER_TTL);
-        return getUser(id);
+        return name.toString();
     }
 
-    public long getTtl(String id) {
-        Long ttl = redisTemplate.getExpire(userKey(id));
-        return ttl != null ? ttl : -1L;
+
+    public String getTtl(String mail) {
+        Long ttl = redis.getExpire(userKey(mail));
+
+        return String.valueOf(ttl == null ? -1L : ttl);
     }
 
-    private void validateRegister(AuthDTOS.UserDTO dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("Request body is required");
-        }
-        if (isBlank(dto.gmail()) || isBlank(dto.password()) || isBlank(dto.name())) {
-            throw new IllegalArgumentException("gmail, password and name are required");
-        }
+    private String userKey(String mail) {
+        return "user:" + mail.trim().toLowerCase(Locale.ROOT);
     }
+     public void save_user(AuthDTOS user){
+        UsersEntity saveObj=new UsersEntity();
+        saveObj.setUsername(user.name);
+        saveObj.setPassword(user.password);
+        saveObj.setEmail(user.mail);
+        rep.save(saveObj);
+    } 
 
-    private static String userKey(String id) {
-        return "user:" + id;
-    }
 
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    private static String stringValue(Object value) {
-        return value == null ? null : value.toString();
-    }
 }

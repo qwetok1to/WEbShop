@@ -46,33 +46,13 @@ services:
       - "8080:8080"
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-32-byte-development-secret}
     depends_on:
       - eureka
     networks:
       - netflix-network
 
-  admin:
-    build: ./admin/admin
-    ports:
-      - "8084:8082"
-    environment:
-      SECURITY_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin-password}
-      SECURITY_JWT_SECRET: ${ADMIN_JWT_SECRET:-dev-only-admin-secret-change-before-deploy-1234567890}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1"
-      APP_IMAGE_STORAGE_DIR: /app/image
-    volumes:
-      - product_images:/app/image
-    depends_on:
-      postgres:
-        condition: service_healthy
-      eureka:
-        condition: service_started
-    networks:
-      - netflix-network
+
 
   auth-service:
     build: ./auth-service
