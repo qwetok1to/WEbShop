@@ -98,6 +98,25 @@ services:
     networks:
       - netflix-network
 
+  admin:
+    build: ./admin
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/webshop
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1"
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-32-byte-development-secret}
+    depends_on:
+      eureka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    networks:
+      - netflix-network
+
 networks:
   netflix-network:
     driver: bridge

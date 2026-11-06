@@ -24,6 +24,7 @@ public class JWTfilter extends OncePerRequestFilter {
     public JWTfilter(JWT_UTILS jwt) {
         this.jwt = jwt;
     }
+    
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
@@ -76,9 +77,7 @@ public class JWTfilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.equals("/admin/login")
-                || path.equals("/admin/register")
-                || path.equals("/auth-public/login")
+        return path.equals("/auth-public/login")
                 || path.equals("/auth-public/register")
                 || (request.getMethod().equals("GET")
                         && (path.equals("/image") || path.startsWith("/image/")));
