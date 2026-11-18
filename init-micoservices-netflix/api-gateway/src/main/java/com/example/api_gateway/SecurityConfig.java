@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(admin -> admin
                         .requestMatchers(
                                 "/admin/login",
-                                "/admin/register",
+                                "//admin-dashboard/auth",
                                 "/auth-public/login",
                                 "/auth-public/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/image/**").permitAll()

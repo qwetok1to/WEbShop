@@ -97,6 +97,8 @@ public class RedisSerivce {
         saveObj.setUsername(user.name);
         saveObj.setPassword(user.password);
         saveObj.setEmail(user.mail);
+        saveObj.setRole(user.role);
+        
         rep.save(saveObj);
     } 
 
